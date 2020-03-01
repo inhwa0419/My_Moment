@@ -23,30 +23,41 @@
   <script type="text/javascript">
     $(document).ready(function(){
       $('#card-box').html('');
-       listing();
-      search()
+      listing();
     });
 
+
     function search() {
+      var title = $('#moment_title').val();
       $.ajax({
         type: "GET",
         url: "/search",
-        headers: {
-          "X-Naver-Client-Id": "bF6LcFNAOzjhuemna10",
-          "X-Naver-Client-Secret": "EprEWwEjKA"
-        },
-        data: {},
+        data: {title_give:title},
         success: function(response){
-          var title = $('#moment_title').val();
-          console.log(title);
-          var list = response['items'];
-          for (i in list){
-            var title = list[i]['title'];
-            var image = list[i]['image'];
-          }
+          console.log(response);
+          $('#movie_search').empty();
+          for(i in response['movies']){
+            var title = response['movies'][i]['title'];
+            var image = response['movies'][i]['image'];
 
+            let temp_html =
+            '<div class="list-group">\
+            <button type="button" onclick="send('+"\'"+image+"\'"+')" class="list-group-item list-group-item-action">\
+            '+title+'<img src='+image+' alt="..." class="img-thumbnail" style="width:125px; height:135px; margin-left:30px">\
+            </button>\
+            </div>';
+            $('#movie_search').append(temp_html);
+          }
         }
       })
+    }
+    
+    var thum = "";
+
+    function send(image){
+      console.log(image);
+      thum+=image;
+      return image;
     }
 
     function listing(){
@@ -62,17 +73,21 @@
             var title = response['info'][i]['title'];
             var star_num = response['info'][i]['star'];
             var description = response['info'][i]['description'];
+            var image = response['info'][i]['image'];
             var star_entity = "";
             for(var i=0; i<star_num; i++){
               star_entity += '<a class="on" href="#">★</a>';
             }
-
 
             let temp_html =
             '<div class="col-sm-4" id="card-box">\
             <div class="card">\
             <div class="card-header">\
             <p class="card-text">'+date+'</p>\
+            </div>\
+            <div class="row no-gutters">\
+            <div class="col-md-4">\
+            <img src="'+image+'" class="card-img" alt="..." style="margin-top:30px; margin-left:10px; margin-right:10px">\
             </div>\
             <div class="card-body">\
             <label> Title : </label>\
@@ -102,12 +117,13 @@
       $('.star_rating_children').filter('.on').each(function (idx){ star += 1;
         star_entity += '<a class="on" href="#">★</a>';});
       var description = $('#moment_des').val();
-      
+      var image = thum;
+      thum = "";
 
       $.ajax({
        type: "POST",
        url: "/new",
-       data: { date_give: date,  title_give:title, star_give: star, description_give: description },
+       data: { date_give: date,  title_give:title, star_give: star, description_give: description, image_give: image },
        success: function(response){
          console.log(response)
        }
@@ -115,12 +131,17 @@
 
 
       alert("Moment 추가 완료!");
+      $('#movie_search').empty();
 
       let temp_html = 
-      '<div class="col-sm-4" id="card-box">\
+      '<div class="col-md-4" id="card-box">\
       <div class="card">\
       <div class="card-header">\
       <p class="card-text">'+date+'</p>\
+      </div>\
+      <div class="row no-gutters">\
+      <div class="col-md-4">\
+      <img src="'+image+'" class="card-img" alt="..." style="margin-top:30px; margin-left:10px; margin-right:10px">\
       </div>\
       <div class="card-body">\
       <label> Title : </label>\
@@ -195,6 +216,7 @@
                   <a class="star_rating_children" href="#">★</a>
                 </p>
               </div>
+              <button type="button" class="btn btn-info" onclick="search()" style=" margin-left: 15px">Search</button>
             </div>
             <div class="row form-group">
               <div class="col">
@@ -212,7 +234,8 @@
           </div>
         </div>
       </div>
-       
+      <div class="col-sm-4" id="movie_search">
+      </div>
     </div>
   </div>
   <script type="text/javascript">

@@ -13,8 +13,5 @@ h1{color: white}
 }
 .star_rating a:first-child {margin-left:0;}
 .star_rating a.on {color:orange;}
-#movie_search.col-sm-4 {
-	margin-bottom: 15px;
-	overflow-y: scroll;
-	height: 500px;
-	}
+.col-sm-4 {margin-bottom: 15px;
+}
