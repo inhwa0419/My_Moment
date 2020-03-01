@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <!-- Webpage Title -->
+  <title>My Moment</title>
+
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <!-- JS -->   
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+  <!-- 구글 폰트 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      $('#card-box').html('');
+       listing();
+      search()
+    });
+
+    function search() {
+      $.ajax({
+        type: "GET",
+        url: "/search",
+        headers: {
+          "X-Naver-Client-Id": "bF6LcFNAOzjhuemna10",
+          "X-Naver-Client-Secret": "EprEWwEjKA"
+        },
+        data: {},
+        success: function(response){
+          var title = $('#moment_title').val();
+          console.log(title);
+          var list = response['items'];
+          for (i in list){
+            var title = list[i]['title'];
+            var image = list[i]['image'];
+          }
+
+        }
+      })
+    }
+
+    function listing(){
+      $.ajax({
+        type: "GET",
+        url: "/list",
+        data: {},
+        success: function(response){
+          console.log(response);
+          $('#card-input > #card-box').remove();
+          for (i in response['info']){
+            var date = response['info'][i]['date'];
+            var title = response['info'][i]['title'];
+            var star_num = response['info'][i]['star'];
+            var description = response['info'][i]['description'];
+            var star_entity = "";
+            for(var i=0; i<star_num; i++){
+              star_entity += '<a class="on" href="#">★</a>';
+            }
+
+
+            let temp_html =
+            '<div class="col-sm-4" id="card-box">\
+            <div class="card">\
+            <div class="card-header">\
+            <p class="card-text">'+date+'</p>\
+            </div>\
+            <div class="card-body">\
+            <label> Title : </label>\
+            <p class="card-text">'+title+'</p>\
+            <label> Star : </label>\
+            <p class="star_rating">'+star_entity+'</p>\
+            <label> Description : </label>\
+            <p class="card-text comment">'+description+'</p>\
+            <button class="btn btn-danger btn-sm" onclick="delete_moment('+"\'"+title+"\'"+')"><i class="clear-moment" aria-hidden="true"></i> Delete</button>\
+            <button class="btn btn-success btn-sm"><i class="update-moment" aria-hidden="true"></i> Update Moment</button>\
+            </div>\
+            </div>\
+            </div>';
+            $('#card-input').append(temp_html);
+          }
+        }
+      })
+    }
+
+
+
+    function add_moment(){
+      var star = 0;
+      var date = $('#momnet_date').val();
+      var title = $('#moment_title').val();
+      var star_entity = "";
+      $('.star_rating_children').filter('.on').each(function (idx){ star += 1;
+        star_entity += '<a class="on" href="#">★</a>';});
+      var description = $('#moment_des').val();
+      
+
+      $.ajax({
+       type: "POST",
+       url: "/new",
+       data: { date_give: date,  title_give:title, star_give: star, description_give: description },
+       success: function(response){
+         console.log(response)
+       }
+     })
+
+
+      alert("Moment 추가 완료!");
+
+      let temp_html = 
+      '<div class="col-sm-4" id="card-box">\
+      <div class="card">\
+      <div class="card-header">\
+      <p class="card-text">'+date+'</p>\
+      </div>\
+      <div class="card-body">\
+      <label> Title : </label>\
+      <p class="card-text">'+title+'</p>\
+      <label> Star : </label>\
+      <p class="star_rating">'+star_entity+'</p>\
+      <label> Description : </label>\
+      <p class="card-text comment">'+description+'</p>\
+      <button class="btn btn-danger btn-sm" onclick="delete_moment('+"\'"+title+"\'"+')"><i class="clear-moment" aria-hidden="true"></i> Delete</button>\
+      <button class="btn btn-success btn-sm"><i class="update-moment" aria-hidden="true"></i> Update Moment</button>\
+      </div>\
+      </div>\
+      </div>';
+      $('#card-input').append(temp_html);
+
+      $('#momnet_date').val(""); 
+      $('#moment_title').val("");
+      $('.star_rating_children').removeClass("on");
+      $('#moment_des').val(""); 
+      
+    }
+
+    function delete_moment(title){
+      $.ajax({
+       type: "POST",
+       url: "/delete",
+       data: { title_give:title },
+       success: function(response){
+         console.log(response)
+         listing();
+       }
+     })
+    }
+
+  </script>
+
+</head>
+
+<body>
+  <div class="jumbotron text-center">
+    <h1><b><i class="main-title" aria-hidden="true"></i>My <i>Moment</i></b></h1>
+    <p>Keep your Moment up to date.</p>
+  </div>
+  <div class="container-fluid">
+    <div class="row" id = "card-input">
+      <div class="col-sm-4">
+        <div class="card">
+          <div class="card-header">
+            Add New Moment
+          </div>
+          <div class="card-body">
+            <div class="form-group row">
+              <div class="container">
+                <label>Moment date : </label>
+                <div class="input-group date">
+
+                  <input type="date" id = "momnet_date" class="form-control"><span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <label>Moment Title : </label>
+                <input type="hidden">
+                <input id = "moment_title"type="text" class="form-control">
+              </div>
+              <div class="col-sm-6">
+                <label>Moment Star : </label>
+                <p class="star_rating" id = "moment_star">
+                  <a class="star_rating_children" href="#">★</a>
+                  <a class="star_rating_children" href="#">★</a>
+                  <a class="star_rating_children" href="#">★</a>
+                  <a class="star_rating_children" href="#">★</a>
+                  <a class="star_rating_children" href="#">★</a>
+                </p>
+              </div>
+            </div>
+            <div class="row form-group">
+              <div class="col">
+                <label>Moment Description : </label>
+                <textarea id = "moment_des" class="form-control"></textarea>
+              </div>
+            </div>
+            <div class="row form-group"> 
+              <div class="col text-right">
+                <button class="btn btn-danger btn-sm"><i class="clear-moment" aria-hidden="true"></i> Clear</button>
+                <button class="btn btn-primary btn-sm" onclick="add_moment()"><i class="add-moment" aria-hidden="true"></i> Add Moment</button>
+                <button class="btn btn-success btn-sm"><i class="update-moment" aria-hidden="true"></i> Update Moment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+    </div>
+  </div>
+  <script type="text/javascript">
+    $( ".star_rating a" ).click(function() {
+     $(this).parent().children("a").removeClass("on");
+     $(this).addClass("on").prevAll("a").addClass("on");
+     return false;
+   });
+ </script>
+</body>
+
+</html>

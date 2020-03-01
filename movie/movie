@@ -1,0 +1,51 @@
+from flask import Flask, render_template, jsonify, request
+import requests
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017)
+db = client.moment
+
+app = Flask(__name__)
+# html을 주는 부분
+@app.route('/')
+def home():
+    return render_template('main.html')
+
+@app.route('/list', methods=['GET'])
+def listing():
+    all_moment = list(db.moments.find({},{'_id':0}))
+    for user in all_moment:
+        print(user)
+    return jsonify({'result':'success', 'info':all_moment})
+
+@app.route('/search', methods=['GET'])
+def search():
+    headers = {"Content-Type": "plain/text",
+        "X-Naver-Client-Id": "bF6LcFNAOzjhuemna10b",
+        "X-Naver-Client-Secret": "EprEWwEjKA"
+    }
+    data = requests.get("https://openapi.naver.com/v1/search/movie?query=괴물", headers = headers)
+    soup = data.json()
+    print(soup)
+    return jsonify({'result':'success'})
+
+@app.route('/new', methods=['POST'])
+def new_post():
+    date_receive = request.form['date_give']
+    title_receive = request.form['title_give']
+    star_receive = request.form['star_give']
+    description_receive = request.form['description_give']
+
+    db.moments.insert_one({'date': date_receive, 'title':title_receive, 'star': star_receive, 'description':description_receive})
+
+    return jsonify({'result': 'success'})
+
+@app.route('/delete', methods=['POST'])
+def delete_post():
+    title_receive = request.form['title_give']
+    db.moments.delete_one({'title': title_receive})
+
+    return jsonify({'result': 'success'})
+
+
+if __name__ == '__main__':
+    app.run('0.0.0.0',port=5000,debug=True)
